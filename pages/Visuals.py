@@ -44,7 +44,7 @@ else:
 st.divider()
 
 # ==================== GRAPH 1: STATIC (JSON) ====================
-st.subheader("Graph 1: Daily Screen Time by Activity")
+st.subheader("Static: Daily Screen Time by Activity")
 st.write("This bar chart shows screen time breakdown by activity type.")
 
 if json_data:
@@ -63,17 +63,21 @@ else:
 st.divider()
 
 # ==================== GRAPH 2: DYNAMIC (CSV) ====================
-st.subheader("Graph 2: Weekly Screen Time Trend")
-st.write("This line chart shows screen time over days. Use the slider to adjust how many days to display.")
+st.subheader("Dynamic: Weekly Screen Time Trend")
+st.write("This line chart shows screen time over days. Use the controls to filter and view the data.")
 
 if csv_data is not None and len(csv_data) > 0:
     # Session state for slider
     if 'num_days' not in st.session_state:
         st.session_state.num_days = min(7, len(csv_data))
 
-    # Slider
+    # Session state for min hours
+    if 'min_hours_line' not in st.session_state:
+        st.session_state.min_hours_line = 0.0
+
+    # Slider for number of days
     num_to_show = st.slider( #NEW
-        "Number of days:",
+        "Number of days to display:",
         min_value=1,
         max_value=len(csv_data),
         value=st.session_state.num_days,
@@ -82,17 +86,36 @@ if csv_data is not None and len(csv_data) > 0:
 
     st.session_state.num_days = num_to_show
 
-    filtered_data = csv_data.head(num_to_show)
-    chart_data = filtered_data.set_index('Category')
+    # Slider for minimum hours filter
+    min_hours_filter = st.slider( #NEW
+        "Filter by minimum screen time (hours):",
+        min_value=0.0,
+        max_value=10.0,
+        value=st.session_state.min_hours_line,
+        step=0.5,
+        key='line_hours_filter'
+    )
 
-    st.line_chart(chart_data)
+    st.session_state.min_hours_line = min_hours_filter
+
+    # Filter data by number of days first
+    filtered_data = csv_data.head(num_to_show)
+
+    # Then filter by minimum hours
+    filtered_data = filtered_data[filtered_data['Value'] >= min_hours_filter]
+
+    if len(filtered_data) > 0:
+        chart_data = filtered_data.set_index('Category')
+        st.line_chart(chart_data)
+    else:
+        st.info("No days meet the filter criteria.")
 else:
     st.warning("No CSV data available.")
 
 st.divider()
 
 # ==================== GRAPH 3: DYNAMIC SCATTER PLOT (JSON) ====================
-st.subheader("Graph 3: Time Spent vs How Often Used")
+st.subheader("Dynamic: Time Spent vs How Often Used")
 st.write("This scatter plot shows total hours spent on each activity compared to how many times per day you use it. Select activities and adjust the filter to explore the data.")
 
 if json_data:
