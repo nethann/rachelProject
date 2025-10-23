@@ -49,11 +49,11 @@ st.write("This bar chart shows screen time breakdown by activity type.")
 
 if json_data:
     labels = [item['label'] for item in json_data['data_points']]
-    values = [item['value'] for item in json_data['data_points']]
+    hours = [item['hours'] for item in json_data['data_points']]
 
     chart_data = pd.DataFrame({
         'Activity': labels,
-        'Hours': values
+        'Hours': hours
     })
 
     st.bar_chart(chart_data.set_index('Activity'))
@@ -91,37 +91,60 @@ else:
 
 st.divider()
 
-# ==================== GRAPH 3: DYNAMIC (JSON) ====================
-st.subheader("Graph 3: Activity Comparison")
-st.write("Select which activities to compare.")
+# ==================== GRAPH 3: DYNAMIC SCATTER PLOT (JSON) ====================
+st.subheader("Graph 3: Time Spent vs How Often Used")
+st.write("This scatter plot shows total hours spent on each activity compared to how many times per day you use it. Select activities and adjust the filter to explore the data.")
 
 if json_data:
-    # Session state for multiselect
-    if 'selected_activities' not in st.session_state:
-        st.session_state.selected_activities = [item['label'] for item in json_data['data_points']]
+    # Session state for min hours
+    if 'min_hours_scatter' not in st.session_state:
+        st.session_state.min_hours_scatter = 0.0
 
+    # Session state for selected activities
+    if 'scatter_selected' not in st.session_state:
+        st.session_state.scatter_selected = [item['label'] for item in json_data['data_points']]
+
+    # Get all activities
     all_activities = [item['label'] for item in json_data['data_points']]
 
-    # Multiselect
-    selected = st.multiselect( #NEW
-        "Select activities:",
+    # Multiselect for activities
+    selected_activities = st.multiselect( #NEW
+        "Select activities to compare:",
         options=all_activities,
-        default=st.session_state.selected_activities,
-        key='activity_selector'
+        default=st.session_state.scatter_selected,
+        key='scatter_activity_selector'
     )
 
-    st.session_state.selected_activities = selected
+    st.session_state.scatter_selected = selected_activities
 
-    if selected:
-        filtered_json = [item for item in json_data['data_points'] if item['label'] in selected]
+    # Slider to filter by hours
+    min_hours = st.slider( #NEW
+        "Minimum hours to display:",
+        min_value=0.0,
+        max_value=5.0,
+        value=st.session_state.min_hours_scatter,
+        step=0.5,
+        key='scatter_hours_filter'
+    )
+
+    st.session_state.min_hours_scatter = min_hours
+
+    # Filter data
+    filtered_data = [item for item in json_data['data_points']
+                     if item['hours'] >= min_hours and item['label'] in selected_activities]
+
+    if filtered_data:
+        hours = [item['hours'] for item in filtered_data]
+        sessions = [item['sessions'] for item in filtered_data]
 
         chart_data = pd.DataFrame({
-            'Activity': [item['label'] for item in filtered_json],
-            'Hours': [item['value'] for item in filtered_json]
+            'Total Hours': hours,
+            'Times Used Per Day': sessions
         })
 
-        st.bar_chart(chart_data.set_index('Activity'))
+        # Create scatter plot
+        st.scatter_chart(chart_data, x='Total Hours', y='Times Used Per Day') #NEW
     else:
-        st.info("Select at least one activity.")
+        st.info("No activities meet the filter criteria.")
 else:
     st.warning("No JSON data available.")

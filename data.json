@@ -1,25 +1,30 @@
 {
-    "chart_title": "Daily Screen Time by Activity (Hours)",
+    "chart_title": "Daily Screen Time by Activity",
     "data_points": [
         {
             "label": "Social Media",
-            "value": 3.5
+            "hours": 3.5,
+            "sessions": 15
         },
         {
             "label": "Streaming Videos",
-            "value": 2.5
+            "hours": 2.5,
+            "sessions": 3
         },
         {
             "label": "Gaming",
-            "value": 1.5
+            "hours": 1.5,
+            "sessions": 2
         },
         {
             "label": "Work/Study",
-            "value": 4.0
+            "hours": 4.0,
+            "sessions": 4
         },
         {
             "label": "Reading/News",
-            "value": 1.0
+            "hours": 1.0,
+            "sessions": 8
         }
     ]
 }
